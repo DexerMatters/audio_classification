@@ -1,0 +1,13 @@
+name: audio-classification
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - matplotlib
+  - pytorch
+  - librosa
+  - scikit-learn
