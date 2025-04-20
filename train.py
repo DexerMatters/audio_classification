@@ -1,4 +1,4 @@
-import glob
+import os
 from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
@@ -27,9 +27,39 @@ if __name__ == "__main__":
     learning_rate = 1e-4
     num_epochs = 50
 
+    # Audio file extensions to look for
+    audio_extensions = [".wav", ".mp3", ".flac", ".ogg", ".m4a"]
+
     # Load file paths from directories
-    speech_files = glob.glob("./data/speech/*.*")  # All audio files in speech directory
-    music_files = glob.glob("./data/music/*.*")  # All audio files in music directory
+    speech_dir = "./data/speech"
+    music_dir = "./data/music"
+
+    # Check if directories exist
+    if not os.path.exists(speech_dir):
+        raise FileNotFoundError(f"Speech directory not found: {speech_dir}")
+    if not os.path.exists(music_dir):
+        raise FileNotFoundError(f"Music directory not found: {music_dir}")
+
+    # Get all audio files from directories
+    speech_files = []
+    for filename in os.listdir(speech_dir):
+        ext = os.path.splitext(filename)[1].lower()
+        if ext in audio_extensions:
+            speech_files.append(os.path.join(speech_dir, filename))
+
+    music_files = []
+    for filename in os.listdir(music_dir):
+        ext = os.path.splitext(filename)[1].lower()
+        if ext in audio_extensions:
+            music_files.append(os.path.join(music_dir, filename))
+
+    # Verify files were found
+    if len(speech_files) == 0:
+        raise ValueError(f"No audio files found in {speech_dir}")
+    if len(music_files) == 0:
+        raise ValueError(f"No audio files found in {music_dir}")
+
+    print(f"Found {len(speech_files)} speech files and {len(music_files)} music files")
 
     # Assign labels: 0 for speech, 1 for music
     speech_labels = [0] * len(speech_files)
