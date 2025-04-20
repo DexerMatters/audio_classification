@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 from baseline import AudioTransformer
 from loader import AudioDataset
@@ -70,8 +71,14 @@ if __name__ == "__main__":
 
     # Training loop
     best_accuracy = 0
+    train_losses = []
+    val_accuracies = []
+
     for epoch in range(num_epochs):
         model.train()
+        epoch_loss = 0.0
+        batch_count = 0
+
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
@@ -79,6 +86,13 @@ if __name__ == "__main__":
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
+
+            epoch_loss += loss.item()
+            batch_count += 1
+
+        # Calculate average loss for the epoch
+        avg_train_loss = epoch_loss / batch_count
+        train_losses.append(avg_train_loss)
 
         # Validation
         model.eval()
@@ -92,7 +106,35 @@ if __name__ == "__main__":
                 correct += (predicted == labels).sum().item()
 
         accuracy = correct / total
-        print(f"Epoch {epoch+1}/{num_epochs}, Validation Accuracy: {accuracy:.4f}")
+        val_accuracies.append(accuracy)
+        print(
+            f"Epoch {epoch+1}/{num_epochs}, Train Loss: {avg_train_loss:.4f}, Validation Accuracy: {accuracy:.4f}"
+        )
+
+        # Plot and save training curves
+        plt.figure(figsize=(12, 5))
+
+        # Plot training loss
+        plt.subplot(1, 2, 1)
+        plt.plot(range(1, epoch + 2), train_losses, "b-", label="Training Loss")
+        plt.title("Training Loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.grid(True)
+        plt.legend()
+
+        # Plot validation accuracy
+        plt.subplot(1, 2, 2)
+        plt.plot(range(1, epoch + 2), val_accuracies, "r-", label="Validation Accuracy")
+        plt.title("Validation Accuracy")
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.grid(True)
+        plt.legend()
+
+        plt.tight_layout()
+        plt.savefig("./status.png")
+        plt.close()
 
         if accuracy > best_accuracy:
             best_accuracy = accuracy
